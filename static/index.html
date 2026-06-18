@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Notes</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0f1117;
+      --surface:  #181c27;
+      --border:   #2a2f42;
+      --accent:   #6c8fff;
+      --accent2:  #a78bfa;
+      --text:     #e2e8f0;
+      --muted:    #64748b;
+      --danger:   #f87171;
+      --success:  #34d399;
+      --radius:   10px;
+      --mono:     'IBM Plex Mono', monospace;
+      --sans:     'Inter', sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      grid-template-rows: 56px 1fr;
+    }
+
+    /* ── Top Bar ── */
+    header {
+      grid-column: 1 / -1;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      gap: 16px;
+    }
+    .logo {
+      font-family: var(--mono);
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--accent);
+      letter-spacing: -0.5px;
+    }
+    .logo span { color: var(--accent2); }
+    .search-wrap {
+      flex: 1;
+      max-width: 400px;
+      margin-left: auto;
+      position: relative;
+    }
+    .search-wrap input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 7px 14px 7px 36px;
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .search-wrap input:focus { border-color: var(--accent); }
+    .search-icon {
+      position: absolute;
+      left: 10px; top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .note-count {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    /* ── Sidebar ── */
+    aside {
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar-top {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .btn-new {
+      width: 100%;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      padding: 9px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .15s;
+      letter-spacing: .3px;
+    }
+    .btn-new:hover { opacity: .85; }
+
+    .notes-list { flex: 1; padding: 8px; }
+    .note-card {
+      padding: 12px 14px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background .15s;
+      border: 1px solid transparent;
+      margin-bottom: 4px;
+    }
+    .note-card:hover { background: var(--surface); }
+    .note-card.active {
+      background: var(--surface);
+      border-color: var(--accent);
+    }
+    .card-title {
+      font-size: 13px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 4px;
+    }
+    .card-preview {
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 6px;
+    }
+    .card-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .card-date {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+    }
+    .tag {
+      font-size: 10px;
+      font-family: var(--mono);
+      background: rgba(108,143,255,.15);
+      color: var(--accent);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .empty-sidebar {
+      padding: 32px 16px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    /* ── Main Editor ── */
+    main {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .editor-toolbar {
+      padding: 12px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .editor-toolbar input[type="text"] {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-size: 20px;
+      font-weight: 600;
+      outline: none;
+      font-family: var(--sans);
+    }
+    .editor-toolbar input[type="text"]::placeholder { color: var(--muted); }
+    .tags-input {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 6px 10px;
+      color: var(--text);
+      font-size: 12px;
+      font-family: var(--mono);
+      outline: none;
+      width: 200px;
+    }
+    .tags-input:focus { border-color: var(--accent2); }
+
+    .btn {
+      padding: 7px 16px;
+      border-radius: var(--radius);
+      border: none;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .15s;
+      white-space: nowrap;
+    }
+    .btn:hover { opacity: .8; }
+    .btn-save { background: var(--success); color: #0f1117; }
+    .btn-delete { background: var(--danger); color: #fff; }
+    .btn-cancel { background: var(--border); color: var(--text); }
+
+    .editor-body {
+      flex: 1;
+      padding: 24px;
+      overflow-y: auto;
+    }
+    textarea {
+      width: 100%;
+      height: 100%;
+      min-height: 400px;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.75;
+      resize: none;
+      outline: none;
+      font-family: var(--sans);
+    }
+    textarea::placeholder { color: var(--muted); }
+
+    .welcome {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--muted);
+      gap: 12px;
+    }
+    .welcome-icon { font-size: 48px; }
+    .welcome h2 { font-size: 18px; color: var(--text); }
+    .welcome p { font-size: 13px; text-align: center; max-width: 280px; line-height: 1.6; }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed;
+      bottom: 24px; right: 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 20px;
+      font-size: 13px;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: all .3s;
+      pointer-events: none;
+      z-index: 999;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+    #toast.success { border-color: var(--success); color: var(--success); }
+    #toast.error { border-color: var(--danger); color: var(--danger); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">notes<span>.api</span></div>
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="Search notes…"/>
+  </div>
+  <span class="note-count" id="noteCount">0 notes</span>
+</header>
+
+<aside>
+  <div class="sidebar-top">
+    <button class="btn-new" onclick="startNew()">+ New Note</button>
+  </div>
+  <div class="notes-list" id="notesList"></div>
+</aside>
+
+<main id="mainArea">
+  <div class="welcome" id="welcomeScreen">
+    <div class="welcome-icon">📝</div>
+    <h2>Your Notes</h2>
+    <p>Select a note from the sidebar or create a new one to get started.</p>
+  </div>
+</main>
+
+<div id="toast"></div>
+
+<script>
+  const API = '/api/v1/notes';
+  let notes = [];
+  let activeId = null;
+  let isNew = false;
+
+  // ── Fetch & Render List ──────────────────────────────────────────────────
+  async function loadNotes(search = '') {
+    const url = search ? `${API}?search=${encodeURIComponent(search)}` : API;
+    const res = await fetch(url);
+    notes = await res.json();
+    renderList();
+    document.getElementById('noteCount').textContent = `${notes.length} note${notes.length !== 1 ? 's' : ''}`;
+  }
+
+  function renderList() {
+    const list = document.getElementById('notesList');
+    if (!notes.length) {
+      list.innerHTML = '<div class="empty-sidebar">No notes yet.<br/>Hit <b>+ New Note</b> to begin.</div>';
+      return;
+    }
+    list.innerHTML = notes.map(n => `
+      <div class="note-card ${n.id === activeId ? 'active' : ''}" onclick="openNote('${n.id}')">
+        <div class="card-title">${esc(n.title)}</div>
+        <div class="card-preview">${esc(n.content)}</div>
+        <div class="card-meta">
+          <span class="card-date">${fmtDate(n.updated_at)}</span>
+          ${n.tags.map(t => `<span class="tag">${esc(t)}</span>`).join('')}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ── Open existing note ───────────────────────────────────────────────────
+  function openNote(id) {
+    activeId = id;
+    isNew = false;
+    const n = notes.find(x => x.id === id);
+    if (!n) return;
+    renderList();
+    showEditor(n.title, n.content, n.tags.join(', '), id);
+  }
+
+  // ── New note ─────────────────────────────────────────────────────────────
+  function startNew() {
+    activeId = null;
+    isNew = true;
+    renderList();
+    showEditor('', '', '');
+  }
+
+  // ── Render Editor ────────────────────────────────────────────────────────
+  function showEditor(title, content, tags, id = null) {
+    const deleteBtn = id ? `<button class="btn btn-delete" onclick="deleteNote('${id}')">Delete</button>` : '';
+    document.getElementById('mainArea').innerHTML = `
+      <div class="editor-toolbar">
+        <input type="text" id="edTitle" placeholder="Note title…" value="${esc(title)}"/>
+        <input class="tags-input" id="edTags" placeholder="tags, comma, separated" value="${esc(tags)}"/>
+        <button class="btn btn-save" onclick="saveNote()">Save</button>
+        ${deleteBtn}
+        <button class="btn btn-cancel" onclick="cancelEdit()">Cancel</button>
+      </div>
+      <div class="editor-body">
+        <textarea id="edContent" placeholder="Start writing…">${esc(content)}</textarea>
+      </div>
+    `;
+    document.getElementById('edTitle').focus();
+  }
+
+  // ── Save (Create or Update) ──────────────────────────────────────────────
+  async function saveNote() {
+    const title   = document.getElementById('edTitle').value.trim();
+    const content = document.getElementById('edContent').value.trim();
+    const tagsRaw = document.getElementById('edTags').value.trim();
+    const tags    = tagsRaw ? tagsRaw.split(',').map(t => t.trim()).filter(Boolean) : [];
+
+    if (!title) { toast('Title is required.', 'error'); return; }
+    if (!content) { toast('Content cannot be empty.', 'error'); return; }
+
+    const body = { title, content, tags };
+
+    let res;
+    if (isNew) {
+      res = await fetch(API + '/', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    } else {
+      res = await fetch(`${API}/${activeId}`, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    }
+
+    if (res.ok) {
+      const saved = await res.json();
+      activeId = saved.id;
+      isNew = false;
+      toast(isNew ? 'Note created!' : 'Note saved!', 'success');
+      await loadNotes();
+      openNote(activeId);
+    } else {
+      const err = await res.json();
+      toast(err.detail || 'Something went wrong.', 'error');
+    }
+  }
+
+  // ── Delete ────────────────────────────────────────────────────────────────
+  async function deleteNote(id) {
+    if (!confirm('Delete this note? This cannot be undone.')) return;
+    const res = await fetch(`${API}/${id}`, { method: 'DELETE' });
+    if (res.ok) {
+      activeId = null;
+      toast('Note deleted.', 'success');
+      await loadNotes();
+      cancelEdit();
+    }
+  }
+
+  function cancelEdit() {
+    activeId = null;
+    isNew = false;
+    renderList();
+    document.getElementById('mainArea').innerHTML = `
+      <div class="welcome" id="welcomeScreen">
+        <div class="welcome-icon">📝</div>
+        <h2>Your Notes</h2>
+        <p>Select a note from the sidebar or create a new one to get started.</p>
+      </div>`;
+  }
+
+  // ── Search ────────────────────────────────────────────────────────────────
+  let searchTimer;
+  document.getElementById('searchInput').addEventListener('input', e => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => loadNotes(e.target.value.trim()), 300);
+  });
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  function esc(s) {
+    return String(s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function fmtDate(iso) {
+    const d = new Date(iso + 'Z');
+    return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+  }
+  function toast(msg, type = 'success') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = `show ${type}`;
+    setTimeout(() => { el.className = ''; }, 3000);
+  }
+
+  // ── Boot ──────────────────────────────────────────────────────────────────
+  loadNotes();
+</script>
+</body>
+</html>
